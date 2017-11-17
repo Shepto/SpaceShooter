@@ -2,12 +2,9 @@
 
 ## [ABOUT/O HRE]
 
-Its simple space 2D shooter where you are controling space ship which have to defeat oponents and stay alive whole level. There will be 
-different levels and each level will be more and more difficult with boss at the end, who player have to defeat to go to the next level.
+Its simple space 2D shooter where you are controling space ship which have to defeat oponents and stay alive as possible. There will be score counter and player will gain score for killing enemies and meteors.
 
-Jedna sa o jedoduchu 2D vesmirnu strielacku v ktorej hrac ovlada vesmirnu lod ktora musi porazit jej nepriatelov a ostat nazive cely level. 
-Bude tam viac rozlicnych levelov a kazdy level bude cim dalej obtiaznejsi. Na konci kazdeho levelu bude boss ktoreho musi hrac porazit aby
-presiel do dalsieho levelu.
+Jedna sa o jedoduchu 2D vesmirnu strielacku v ktorej hrac ovlada vesmirnu lod ktora musi porazit jej nepriatelov a ostat nazive co najdlhsie. V hre sa bude pocitat skore ktore hrac nadobudne nicenim nepriatelov a meteoritov.
 
 
 ## [REQUIRIMENTS/POZIADAVKY]
