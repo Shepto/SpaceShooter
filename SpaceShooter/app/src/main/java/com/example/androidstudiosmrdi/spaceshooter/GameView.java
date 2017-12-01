@@ -1,12 +1,14 @@
 package com.example.androidstudiosmrdi.spaceshooter;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.res.AssetManager;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Picture;
 import android.graphics.Rect;
-import android.util.Log;
+import android.graphics.Typeface;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -33,7 +35,22 @@ public class GameView extends SurfaceView implements Runnable {
     private int counter = 0;
     private ScoreManager scoremanager;
     public static int SCORE = 0;
-    private volatile boolean isGameOver;
+    private Sound sound;
+
+    private boolean shielded = false;
+    private boolean usedShield = false;
+    private boolean canUseShield = true;
+    private boolean resumed = false;
+    public boolean paused = false;
+
+    public boolean writedScore = true;
+    public volatile boolean isGameOver;
+
+
+    private Rect r;
+    Bitmap bitmap;
+
+    public int finalScore = 0;
 
     public GameView(Context context, int screenSizeX, int screenSizeY) {
 
@@ -42,41 +59,68 @@ public class GameView extends SurfaceView implements Runnable {
         this.screenSizeX = screenSizeX;
         this.screenSizeY = screenSizeY;
         scoremanager = new ScoreManager(context);
+        sound = new Sound(context);
 
         paint = new Paint();
         surfaceHolder = getHolder();
-
         reset();
+
+    }
+
+    public static Context getAppContext() {
+        return GameView.getAppContext();
     }
 
     void reset() {
 
         SCORE = 0;
-        player = new Player(getContext(), screenSizeX, screenSizeY);
+        player = new Player(getContext(), screenSizeX, screenSizeY, sound);
         lasers = new ArrayList<>();
         meteors = new ArrayList<>();
         enemies = new ArrayList<>();
         isGameOver = false;
+        canUseShield = true;
+        shielded = false;
+        resumed = true;
+
     }
 
     @Override
     public void run() {
 
         while (isPlaying) {
-            if (!isGameOver) {
+            if (!isGameOver && writedScore == true) {
                 update();
                 draw();
                 control();
+            }
+            if(paused){
+                draw();
+                pause();
             }
         }
     }
 
     public void update() {
 
+
         player.update();
 
         if (counter % 200 == 0) {
             player.fire();
+        }
+
+        //shield control
+        if(usedShield == true){
+
+            if(shielded == true){
+                canUseShield = false;
+            }
+            else if (counter % 8000 == 0) {
+                canUseShield = true;
+                usedShield = false;
+            }
+
         }
 
         for (Meteor m : meteors) {
@@ -86,13 +130,23 @@ public class GameView extends SurfaceView implements Runnable {
             if (Rect.intersects(m.getCollision(), player.getCollision())) {
                 m.destroy();
 
-                player.lifes -= 1;
+                if(shielded == true){
+
+                    shielded = false;
+                }else{
+                    player.lifes -= 1;
+                }
 
                 if(player.lifes == 0){
 
                     isGameOver = true;
+                    writedScore = false;
 
-                    if (SCORE>= scoremanager.getHighScore()){
+                    finalScore = SCORE;
+
+
+                    if (SCORE >= scoremanager.getHighScore()) {
+
                         scoremanager.saveHighScore(SCORE);
                     }
                 }
@@ -121,7 +175,7 @@ public class GameView extends SurfaceView implements Runnable {
             }
         }
         if (counter % 1000 == 0) {
-            meteors.add(new Meteor(getContext(), screenSizeX, screenSizeY));
+            meteors.add(new Meteor(getContext(), screenSizeX, screenSizeY, sound));
         }
 
         for (Enemy e : enemies) {
@@ -132,13 +186,22 @@ public class GameView extends SurfaceView implements Runnable {
 
                 e.destroy();
 
-                player.lifes -= 1;
+                if(shielded == true){
+
+                    shielded = false;
+                }else{
+                    player.lifes -= 1;
+
+                }
 
                 if(player.lifes == 0){
 
                     isGameOver = true;
+                    writedScore = false;
 
-                    if (SCORE>= scoremanager.getHighScore()){
+                    finalScore = SCORE;
+
+                    if (SCORE >= scoremanager.getHighScore()){
                         scoremanager.saveHighScore(SCORE);
                     }
                 }
@@ -170,8 +233,9 @@ public class GameView extends SurfaceView implements Runnable {
             }
         }
         if (counter % 2000 == 0) {
-            enemies.add(new Enemy(getContext(), screenSizeX, screenSizeY));
+            enemies.add(new Enemy(getContext(), screenSizeX, screenSizeY, sound));
         }
+
 
 
     }
@@ -203,35 +267,74 @@ public class GameView extends SurfaceView implements Runnable {
                 drawGameOver();
             }
 
+            if(paused && isGameOver == false){
 
+                drawPause();
+            }
+
+
+            drawShield();
             drawScore();
+
+
+
             surfaceHolder.unlockCanvasAndPost(canvas);
         }
     }
 
     void drawScore() {
         Paint score = new Paint();
-        score.setTextSize(30);
-        score.setColor(Color.WHITE);
-        canvas.drawText("Score : " + SCORE, screenSizeX/20, screenSizeY/18, score);
+        score.setTextSize(40);
+        score.setColor(Color.GRAY);
+        canvas.drawText("Score : " + SCORE, screenSizeX/20, screenSizeY/18+10, score);
     }
 
     void drawLives(){
 
-        int j = screenSizeX/9;
-        Paint lives = new Paint();
-        lives.setTextSize(30);
-        lives.setColor(Color.WHITE);
-
-        canvas.drawText("Lives: ", screenSizeX-(screenSizeX/3), screenSizeY/18, lives);
+        int j = screenSizeX/4;
 
         for (int i= 0; i < player.lifes; i++) {
 
-            canvas.drawBitmap(player.getBitmapLives(), (screenSizeX-(screenSizeX/3)+j),  screenSizeY/30, paint);
-            j += 50;
+            canvas.drawBitmap(player.getBitmapLives(), (screenSizeX-(screenSizeX/2)+j),  screenSizeY/30, paint);
+            j += 60;
+        }
+    }
+
+    void drawShield(){
+
+        if(canUseShield == true){
+            Paint shield = new Paint();
+            shield.setTextSize(40);
+            shield.setColor(Color.RED);
+            canvas.drawText("Shield charged!", screenSizeX/20, screenSizeY - 20, shield);
         }
 
+        if(shielded == true){
 
+            canvas.drawBitmap(player.getBitmapShield(), player.getX()-30,  player.getY() - 30, paint);
+        }
+    }
+
+    void drawPause(){
+
+        Paint pause = new Paint();
+        pause.setTextSize(100);
+        pause.setTextAlign(Paint.Align.CENTER);
+        pause.setColor(Color.GRAY);
+        canvas.drawText("PAUSED", screenSizeX / 2, screenSizeY / 2, pause);
+
+        Paint rect = new Paint();
+        rect.setColor(Color.GRAY);
+        r = new Rect();
+        //left, top, right, bottom
+        r.set(getWidth()/3 - 60, getHeight()/2 + 20, getWidth()/2 + 180, getHeight()/2 + 120);
+        canvas.drawRect(r, rect);
+
+        Paint main = new Paint();
+        main.setTextSize(60);
+        main.setTextAlign(Paint.Align.CENTER);
+        main.setColor(Color.WHITE);
+        canvas.drawText("Go to menu", screenSizeX / 2 - 5, screenSizeY / 2 + 90, main);
 
     }
 
@@ -239,12 +342,12 @@ public class GameView extends SurfaceView implements Runnable {
         Paint gameOver = new Paint();
         gameOver.setTextSize(100);
         gameOver.setTextAlign(Paint.Align.CENTER);
-        gameOver.setColor(Color.WHITE);
+        gameOver.setColor(Color.RED);
         canvas.drawText("GAME OVER", screenSizeX / 2, screenSizeY / 2, gameOver);
         Paint highScore = new Paint();
         highScore.setTextSize(50);
         highScore.setTextAlign(Paint.Align.CENTER);
-        highScore.setColor(Color.WHITE);
+        highScore.setColor(Color.GRAY);
         canvas.drawText("HighScore : " + scoremanager.getHighScore(), screenSizeX / 2, (screenSizeY / 2) + 60, highScore);
     }
 
@@ -279,29 +382,74 @@ public class GameView extends SurfaceView implements Runnable {
     public void pause() {
 
         isPlaying = false;
+        resumed = true;
+
         try {
             gameThread.join();
+            sound.pause();
+
         } catch (InterruptedException e) {
-            e.printStackTrace();
+                e.printStackTrace();
         }
     }
 
     public void resume() {
 
+        paused = false;
+        resumed = true;
         isPlaying = true;
+        sound.resume();
         gameThread = new Thread(this);
         gameThread.start();
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+
+        float x = event.getX();
+        float y = event.getY();
+
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                if (isGameOver){
+
+                //vykreslenie rectanglu a spat do menu pri touch na neho
+                if(paused == true){
+
+                    if(x > getWidth()/3 - 60 && x < getHeight()/2 + 20 && y > getWidth()/2 + 180 && y < getHeight()/2 + 120){
+
+                        Intent intent = new Intent(GameView.getAppContext(), Menu.class);
+                        GameView.getAppContext().startActivity(intent);
+                    }
+                }
+
+                //pauza a dont resume pri stlaceni tlacidla
+                if(paused == true){
+
+                    resume();
+                }
+
+
+                if (isGameOver && writedScore == true){
+
                     reset();
                 }
+
+                if(canUseShield == true){
+
+                    if(resumed == false){
+
+                        shielded = true;
+                        usedShield = true;
+                    }else{
+
+                        resumed = false;
+                    }
+
+                }
+
                 break;
         }
         return super.onTouchEvent(event);
     }
+
 }

@@ -3,6 +3,7 @@ package com.example.androidstudiosmrdi.spaceshooter;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,7 +24,6 @@ public class ScoreManager {
         SharedPreferences.Editor e = sp.edit();
         e.putInt("high_score", score);
         e.commit();
-
     }
 
     public int getHighScore(){

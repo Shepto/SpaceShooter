@@ -13,7 +13,7 @@ import java.util.ArrayList;
 
 public class Player {
 
-    private Bitmap bitmap, bitmapLifes;
+    private Bitmap bitmap, bitmapLifes, bitmapShield;
     private int x;
     private int y;
     private int speed;
@@ -27,14 +27,19 @@ public class Player {
     private ArrayList<Laser> lasers;
     private Context context;
     private int screenSizeX, screenSizeY;
+    private Sound sound;
 
     public int lifes = 3;
 
-    public Player(Context context, int screenSizeX, int screenSizeY) {
+
+
+    public Player(Context context, int screenSizeX, int screenSizeY, Sound soundplayer) {
 
         this.screenSizeX = screenSizeX;
         this.screenSizeY = screenSizeY;
         this.context = context;
+
+        sound = soundplayer;
 
         speed = 1;
         bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.player);
@@ -52,8 +57,11 @@ public class Player {
 
         collision = new Rect(x, y, x + bitmap.getWidth(), y + bitmap.getHeight());
 
-        bitmapLifes = BitmapFactory.decodeResource(context.getResources(), R.drawable.life);
+        bitmapLifes = BitmapFactory.decodeResource(context.getResources(), R.drawable.heart);
         bitmapLifes = Bitmap.createScaledBitmap(bitmapLifes, bitmapLifes.getWidth() * 3/5, bitmapLifes.getHeight() * 3/5, false);
+
+        bitmapShield = BitmapFactory.decodeResource(context.getResources(), R.drawable.shield);
+        bitmapShield = Bitmap.createScaledBitmap(bitmapShield, bitmapShield.getWidth() * 3/5, bitmapShield.getHeight() * 3/5, false);
 
     }
 
@@ -94,6 +102,11 @@ public class Player {
         }
     }
 
+    public void destroyShield(){
+        y = screenSizeY + 1;
+        sound.playExplode();
+    }
+
     public ArrayList<Laser> getLasers() {
 
         return lasers;
@@ -102,6 +115,7 @@ public class Player {
     public void fire(){
 
         lasers.add(new Laser(context, screenSizeX, screenSizeY, x, y, bitmap, false));
+        sound.playLaser();
     }
 
     public Rect getCollision() {
@@ -139,6 +153,12 @@ public class Player {
     public Bitmap getBitmapLives() {
 
         return bitmapLifes;
+    }
+
+    //shield
+    public Bitmap getBitmapShield() {
+
+        return bitmapShield;
     }
 
     public int getX() {

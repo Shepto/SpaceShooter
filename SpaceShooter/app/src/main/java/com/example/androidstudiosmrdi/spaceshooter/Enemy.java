@@ -25,19 +25,21 @@ public class Enemy {
     private int HP;
     private int speed;
     private boolean isTurnRight;
+    private Sound sound;
 
     private GameView view;
 
-    public Enemy(Context context, int screenSizeX, int screenSizeY) {
+    public Enemy(Context context, int screenSizeX, int screenSizeY, Sound soundenemy) {
 
         this.screenSizeX = screenSizeX;
         this.screenSizeY = screenSizeY;
+        sound = soundenemy;
 
-        HP = 3;
+        HP = 4;
 
-        enemies = new int[]{R.drawable.enemyship, R.drawable.enemyufo};
+        enemies = new int[]{R.drawable.enemyship, R.drawable.enemyufo, R.drawable.enemyship1};
         Random random = new Random();
-        bitmap = BitmapFactory.decodeResource(context.getResources(), enemies[random.nextInt(2)]);
+        bitmap = BitmapFactory.decodeResource(context.getResources(), enemies[random.nextInt(3)]);
         bitmap = Bitmap.createScaledBitmap(bitmap, bitmap.getWidth() * 3/5, bitmap.getHeight() * 3/5, false);
 
         speed = random.nextInt(3) + 1;
@@ -91,7 +93,9 @@ public class Enemy {
     }
 
     public void destroy(){
+
         y = screenSizeY + 1;
+        sound.playExplode();
     }
 
     public Bitmap getBitmap() {

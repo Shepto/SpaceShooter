@@ -21,7 +21,7 @@ public class Meteor {
     private int minX;
     private int maxY;
     private int minY;
-
+    private Sound sound;
     private int speed;
     private Rect collision;
     private int screenSizeX;
@@ -32,11 +32,12 @@ public class Meteor {
 
     private GameView view;
 
-    public Meteor(Context context, int screenSizeX, int screenSizeY){
+    public Meteor(Context context, int screenSizeX, int screenSizeY, Sound soundmeteor){
 
         this.screenSizeX = screenSizeX;
         this.screenSizeY = screenSizeY;
 
+        sound = soundmeteor;
 
         meteors = new int[]{R.drawable.meteorsmall, R.drawable.meteorbig};
         Random random = new Random();
@@ -93,6 +94,7 @@ public class Meteor {
 
     public void destroy(){
         y = screenSizeY + 1;
+        sound.playExplode();
     }
 
     public Bitmap getBitmap() {
